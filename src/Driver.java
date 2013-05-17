@@ -4,11 +4,10 @@ import java.io.PrintStream;
 
 public class Driver {
 	public static void main( String[] args){
-		System.out.println("asdf");
 		System.out.println(
-			new File("/usr/bin/fdsa").getName());
-		System.out.println(
-			new File("/usr/bin/fdsa").getParent());
+			Converter.changeFileExt(
+				"/usr/bin/asdf", "csv"));
+		//local variables
 		Converter converter;
 
 		//handle args
@@ -16,7 +15,6 @@ public class Driver {
 			File dir = new File( System.getProperty("user.dir"));
 			converter = new Converter( dir, dir);}
 		else if( args.length == 1){
-			//setup input
 			File file = new File( args[0]);
 			if( file.isDirectory())
 				converter = new Converter( file, file);
@@ -24,9 +22,12 @@ public class Driver {
 				converter = new Converter( file,
 					new File(
 						Converter.changeFileExt( args[0], "csv")));}
-			//setup output
-		else if( args.length >= 2){
-			//setup input
-			File input = new File( args[0]);}}
-}
+		else
+			converter = new Converter(
+				new File( args[0]),
+				new File( args[1]));
 
+		//prepare and print stats
+		converter.prep();}
+		
+}

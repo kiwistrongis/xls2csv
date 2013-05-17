@@ -28,22 +28,24 @@ public class Converter {
 		output_mode = output.isDirectory() ?
 			OutputMode.MultipleFiles : OutputMode.SingleFile;}
 
+	//member functions
+	public void prep(){}
+
 	//enum definitions
 	public enum InputMode {
 		Multi, Single }
 	public enum OutputMode {
 		StandardOut, SingleFile, MultipleFiles }
 
-	//functions
+	//static functions
 	public static String changeFileExt(
 			String filename, String ext){
-		File path = new File( filename);
-		String basename = path.getName();
+		Path path = new File( filename).toPath();
+		String basename = path.getFileName().toString();
 		int dot_i = basename.lastIndexOf('.');
 		if( dot_i > 0) //ignore unix-style hidden files ( .hidden )
 			basename = basename.substring( 0, dot_i + 1) + ext;
 		else
 			basename = basename + "." + ext;
-		return path.getParent() + basename;}
-
+		return path.getParent().resolve( basename).toString();}
 }
