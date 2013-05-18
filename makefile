@@ -3,7 +3,7 @@ default: all
 freshen: clean all
 clean: clean-specials
 	rm -rf bin/*
-	rm -rf results/*
+	rm -rf output/*
 clean-specials:
 	rm -rf xls2csv.jar
 

@@ -1,9 +1,13 @@
 //standard library imports
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Iterator;
 //poi imports
@@ -15,23 +19,18 @@ import org.apache.poi.ss.usermodel.Row;
 public class Converter {
 	//fields
 	char delimiter;
-	char eol;
+	String eol;
+	String encoding;
 	File input;
 	File output;
 	InputMode input_mode;
 	OutputMode output_mode;
 
 	//constructors
-	/*public Converter( File input){
-		delimiter = '\t';
-		eol = '\n';
-		this.input = input;
-		input_mode = input.isDirectory() ?
-			InputMode.Multi : InputMode.Single;
-		output_mode = OutputMode.StandardOut;}*/
 	public Converter( File input, File output){
 		delimiter = '\t';
-		eol = '\n';
+		eol = "\r\n";
+		encoding = "UTF-8";
 		this.input = input;
 		this.output = output;
 		input_mode = input.isDirectory() ?
@@ -45,25 +44,49 @@ public class Converter {
 		//create worker threads
 		//evaluate stats
 		return;}
+
 	public void start(){
 		try{
-			convert( input, new PrintWriter( System.out));}
+			//convert( input, new PrintWriter( System.out));}
+			PrintWriter writer = open( output);
+			convert( input, writer);
+			writer.close();}
 		catch( Exception e){
-			System.out.println(e);}}
+			e.printStackTrace();}}
 
 	//private member functions
+	private PrintWriter open( File file)
+			throws FileNotFoundException {
+		return new PrintWriter(
+			new BufferedWriter(
+				new OutputStreamWriter(
+					new FileOutputStream( file),
+					Charset.forName( encoding).newEncoder())));}
+
 	private void convert( File in, PrintWriter out )
 			throws FileNotFoundException, IOException {
 		HSSFWorkbook workbook = new HSSFWorkbook(
 			new FileInputStream( in));
 		//for( HSSFSheet sheet : workbook._sheets)
 		HSSFSheet sheet = workbook.getSheetAt(0);
+		int columnCount = 0;
+		for( Row row : sheet)
+			if( row.getLastCellNum() > columnCount)
+				columnCount = row.getLastCellNum();
+		out.println("\u65e5\u672c\u8a9e\u6587\u5b57\u5217");
 		for( Row row : sheet){
 			Iterator<Cell> i = row.cellIterator();
+			int cellCount = 0;
 			while( i.hasNext()){
 				Cell cell = i.next();
-				out.printf("%s%c", cell,
-					i.hasNext() ? delimiter : eol);}
+				if( i.hasNext())
+					out.printf("%s%c", cell, delimiter);
+				else
+					out.printf("%s", cell);
+				cellCount++;}
+			while( cellCount++ < columnCount)
+				out.print( delimiter);
+			out.print(eol);
 			out.flush();}}
 
 	//enum definitions
@@ -86,6 +109,7 @@ public class Converter {
 
 	//subclasses
 	private class Worker extends Thread {}
+
 	private class FilePair{
 		public File input, output;
 		public FilePair( File input, File output){
