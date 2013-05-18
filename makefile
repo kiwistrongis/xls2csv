@@ -18,7 +18,7 @@ all: \
 
 #special
 test: bin/Driver.class
-	java $(cp) Driver
+	java $(cp) Driver input output
 xls2csv.jar: \
 		src/Manifest.txt \
 		bin/Converter.class \
@@ -32,3 +32,10 @@ bin/Driver.class: src/Driver.java \
 	
 bin/Converter.class: src/Converter.java
 	javac $(cp) $(dest) src/Converter.java
+
+#tests
+test1: bin/Driver.class
+	java $(cp) Driver tests/1170a0a_ty2e0.xls output/1170a0a_ty2e0.csv
+
+test2: bin/Driver.class
+	java $(cp) Driver tests/1170b0a_ty2e0.xls output/1170b0a_ty2e0.csv
