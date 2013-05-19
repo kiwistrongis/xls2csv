@@ -6,6 +6,7 @@ clean: clean-specials
 	rm -rf output/*
 clean-specials:
 	rm -rf xls2csv.jar
+freshen: clean all
 
 #variables
 cp = -cp jsrc:bin:libs/*
@@ -23,7 +24,8 @@ xls2csv.jar: \
 		src/Manifest.txt \
 		bin/Converter.class \
 		bin/Driver.class
-	( cd bin && jar cfe ../xls2csv.jar Driver * )
+	( cd bin && jar cmfe ../src/Manifest.txt \
+		../xls2csv.jar Driver * )
 	
 #top
 bin/Driver.class: src/Driver.java \

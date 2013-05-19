@@ -1,10 +1,10 @@
 //standard library imports
 import java.io.File;
-import java.io.PrintStream;
 
 public class Driver {
 	public static void main( String[] args){
-		System.out.printf("%s,%s\n", args[0], args[1]);
+		/*System.out.printf(
+			"input:  %s\noutput: %s\n", args[0], args[1]);*/
 		//local variables
 		Converter converter;
 
@@ -25,6 +25,9 @@ public class Driver {
 				new File( args[1]));
 
 		//prepare and print stats
-		converter.prep();
+		try{
+			converter.prep();}
+		catch( Exception e){
+			e.printStackTrace();}
 		converter.start();}
 }
