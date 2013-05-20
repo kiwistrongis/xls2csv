@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -24,6 +25,9 @@ public class Converter {
 	public String eol;
 	public String encoding;
 	public String output_ext;
+	public boolean workerLimitEnabled;
+	public int maxWorkerCount;
+	public Integer nextWorker;
 	//conversion variables
 	public File input;
 	public File output;
@@ -32,17 +36,37 @@ public class Converter {
 	public Vector<FilePair> filepairs;
 	public Vector<Worker> workers;
 	//statistic variables
+	private Object statslock;
+	public boolean done;
+	public int succeeded;
+	public int failed;
+	public Vector<Exception> failureCauses;
+	//misc vars
+	public PrintStream log;
 
 	//constructors
 	public Converter( File input, File output){
+		//convertion parameters
 		delimiter = '\t';
 		eol = "\r\n";
 		encoding = "UTF-8";
 		output_ext = "csv";
+		workerLimitEnabled = false;
+		maxWorkerCount = 0;
+		nextWorker = 0;
+		//conversion variables
 		this.input = input;
 		this.output = output;
 		filepairs = new Vector<FilePair>();
-		workers = new Vector<Worker>();}
+		workers = new Vector<Worker>();
+		//statistic variables
+		statslock = new Object();
+		done = false;
+		succeeded = 0;
+		failed = 0;
+		failureCauses = new Vector<Exception>();
+		//misc vars
+		log = System.out;}
 
 	//public member functions
 	public void prep()
@@ -90,8 +114,14 @@ public class Converter {
 		return;}
 
 	public void start(){
-		for( Worker worker : workers)
-			worker.start();}
+		synchronized( nextWorker){
+			if( workerLimitEnabled)
+				while( nextWorker <
+						Math.min( maxWorkerCount, workers.size()))
+					workers.get( nextWorker++).start();
+			else
+				while( nextWorker < workers.size())
+					workers.get( nextWorker++).start();}}
 
 	//private member functions
 	private PrintWriter open( File file)
@@ -128,6 +158,21 @@ public class Converter {
 			out.print(eol);
 			out.flush();}}
 
+	private void handleWorkerTermination( Worker worker){
+		//start next worker ( if needed )
+		synchronized( nextWorker){
+			if( nextWorker < workers.size())
+				workers.get( nextWorker++).start();}
+		//update stats
+		synchronized( statslock){
+			if( worker.succeeded)
+				succeeded++;
+			else{
+				failed++;
+				failureCauses.add( worker.failureCause);}
+			if( nextWorker >= workers.size())
+				done = true;}}
+
 	//enum definitions
 	public enum InputMode {
 		Directory, File }
@@ -137,11 +182,11 @@ public class Converter {
 	//static functions
 	public static File changeFileExt(
 			File original, String ext){
-		System.out.println( original);
 		Path path = original.toPath();
 		String basename = path.getFileName().toString();
 		int dot_i = basename.lastIndexOf('.');
-		if( dot_i > 0) //ignore unix-style hidden files ( .hidden )
+		//ignore unix-style hidden files ( .hidden )
+		if( dot_i > 0)
 			basename = basename.substring( 0, dot_i + 1) + ext;
 		else
 			basename = basename + "." + ext;
@@ -149,19 +194,23 @@ public class Converter {
 
 	//subclasses
 	private class Worker extends Thread {
-		FilePair files;
-		boolean succeeded;
-		Exception failure_cause;
+		public FilePair files;
+		public boolean succeeded;
+		public Exception failureCause;
 		public Worker( FilePair files){
 			this.files = files;}
 		public void run(){
+			log.printf("Worker starting on %s\n", files.input);
 			try{
-				//convert( input, new PrintWriter( System.out));}
 				PrintWriter writer = open( files.output);
 				convert( files.input, writer);
-				writer.close();}
+				writer.close();
+				succeeded = true;}
 			catch( Exception e){
-				e.printStackTrace();}}
+				failureCause = e;
+				succeeded = false;}
+			log.printf("Worker finished on %s\n", files.input);
+			handleWorkerTermination(this);}
 	}
 
 	private class FilePair{
@@ -172,7 +221,7 @@ public class Converter {
 	}
 
 	private class FileExtensionFilter implements FileFilter{
-		String extension;
+		public String extension;
 		public FileExtensionFilter( String extension){
 			this.extension = extension;}
 		public boolean accept( File file){

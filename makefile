@@ -15,7 +15,8 @@ dest = -d bin
 #groups
 all: \
 	bin/Driver.class \
-	bin/Converter.class
+	bin/Converter.class \
+	bin/Configuration.class
 
 #special
 test: bin/Driver.class
@@ -29,11 +30,16 @@ xls2csv.jar: \
 	
 #top
 bin/Driver.class: src/Driver.java \
-		bin/Converter.class
+		bin/Converter.class \
+		bin/Configuration.class
 	javac $(cp) $(dest) src/Driver.java
 	
 bin/Converter.class: src/Converter.java
 	javac $(cp) $(dest) src/Converter.java
+
+bin/Configuration.class: src/Configuration.java \
+		bin/Converter.class
+	javac $(cp) $(dest) src/Configuration.java
 
 #tests
 test1: bin/Driver.class

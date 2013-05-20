@@ -3,10 +3,9 @@ import java.io.File;
 
 public class Driver {
 	public static void main( String[] args){
-		/*System.out.printf(
-			"input:  %s\noutput: %s\n", args[0], args[1]);*/
 		//local variables
 		Converter converter;
+		Configuration config;
 
 		//handle args
 		if( args.length == 0){
@@ -23,6 +22,13 @@ public class Driver {
 			converter = new Converter(
 				new File( args[0]),
 				new File( args[1]));
+
+		//load configuration from file
+		try{
+			config = new Configuration( new File("config.ini"));
+			config.load( converter);}
+		catch( Exception e){
+			e.printStackTrace();}
 
 		//prepare and print stats
 		try{
