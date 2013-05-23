@@ -44,9 +44,7 @@ public class Gui extends JFrame{
 		optionsPanel = null;
 		progressPanel = null;
 		startPanel = null;
-		fileChooser = new JFileChooser();
-		fileChooser.setFileSelectionMode(
-			JFileChooser.DIRECTORIES_ONLY);}
+		fileChooser = new JFileChooser();}
 
 	public void setup(){
 		//Window setup
@@ -159,6 +157,7 @@ public class Gui extends JFrame{
 			button.setVerticalTextPosition( AbstractButton.BOTTOM);
 			button.setHorizontalTextPosition( AbstractButton.CENTER);
 			button.setEnabled(false);
+			button.setMnemonic( KeyEvent.VK_D);
 			// add button with constraints
 			constraints.gridx = 1;
 			this.add( button, constraints);
@@ -223,11 +222,13 @@ public class Gui extends JFrame{
 			//button row
 			JPanel buttons = new JPanel();
 			close = new JButton("Close");
-			close.setMnemonic( KeyEvent.VK_ESCAPE);
+			close.setMnemonic( KeyEvent.VK_C);
 			options = new JButton("Options");
 			options.setEnabled( options_enabled);
 			options.setVisible( options_enabled);
+			options.setMnemonic( KeyEvent.VK_O);
 			start = new JButton("Start");
+			start.setMnemonic( KeyEvent.VK_S);
 			buttons.add( close);
 			buttons.add( options);
 			buttons.add( start);

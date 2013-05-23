@@ -10,7 +10,7 @@ public class Driver {
 		File input;
 		File output;
 		Converter converter;
-		Configuration config = null;
+		final Configuration config = new Configuration();
 		final Controller controller = new Controller();
 
 		//find program path
@@ -38,7 +38,7 @@ public class Driver {
 		File config_file = new File("config.ini");
 		//load configuration from file
 		try{
-			config = new Configuration( config_file);}
+			config.open( config_file);}
 		catch( Exception e){
 			System.out.println("Configuration loading failed");
 			e.printStackTrace();}
@@ -56,6 +56,7 @@ public class Driver {
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				Gui gui = new Gui();
+				config.load( gui);
 				gui.setup();
 				controller.listenTo( gui);}});
 

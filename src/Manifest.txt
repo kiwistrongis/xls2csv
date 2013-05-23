@@ -1,1 +1,0 @@
-Class-Path: libs/ini4j.jar libs/poi-3.9-20121203.jar libs/substance-6.3.jar libs/trident-6.3.jar

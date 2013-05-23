@@ -4,12 +4,14 @@ import java.awt.event.*;
 import java.util.Observable;
 import java.util.Observer;
 import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.text.Document;
 
 /** Controller sub-class
  * handles all user input
  **/
 public class Controller extends KeyAdapter
-		implements ActionListener, Observer {
+		implements ActionListener, Observer, DocumentListener {
 	//constant fields
 	public final static String
 		sp_start_ac = "start",
@@ -19,7 +21,8 @@ public class Controller extends KeyAdapter
 		sp_input_button_ac = "input_button",
 		sp_output_text_ac = "output_text",
 		sp_output_button_ac = "output_button",
-		pp_done_ac = "done";
+		pp_done_ac = "done",
+		documentContainer_property = "documentContainer_property";
 	// major objects
 	Gui gui;
 	Converter converter;
@@ -46,10 +49,9 @@ public class Controller extends KeyAdapter
 		this.listenTo( gui.startPanel.output.text, sp_output_text_ac);
 		this.listenTo( gui.startPanel.output.button, sp_output_button_ac);
 		// progress panel
+		this.listenTo( gui.progressPanel.progressBar);
 		this.listenTo( gui.progressPanel.button, pp_done_ac);}
 		// options panel
-
-
 
 	public void listenTo( JButton button, String ac){
 		button.setActionCommand( ac);
@@ -59,7 +61,13 @@ public class Controller extends KeyAdapter
 	public void listenTo( JTextField field, String ac){
 		field.setActionCommand( ac);
 		field.addActionListener( this);
-		field.addKeyListener( this);}
+		field.addKeyListener( this);
+		Document doc = field.getDocument();
+		doc.putProperty( documentContainer_property, ac);
+		doc.addDocumentListener( this);}
+
+	public void listenTo( JProgressBar bar){
+		bar.addKeyListener( this);}
 	
 	//handles
 	public void update(Observable o, Object arg){
@@ -93,6 +101,18 @@ public class Controller extends KeyAdapter
 			case sp_input_text_ac:{
 				break;}
 			case sp_input_button_ac:{
+				int result = gui.fileChooser.showOpenDialog( gui);
+				switch( result){
+					case JFileChooser.CANCEL_OPTION:
+						System.out.println("File selection cancelled");
+						break;
+					case JFileChooser.APPROVE_OPTION:
+						System.out.println("File chosen");
+						break;
+					case JFileChooser.ERROR_OPTION:
+						System.out.println("File selection error");
+						break;
+					default: break;}
 				break;}
 			case sp_output_text_ac:{
 				break;}
@@ -110,14 +130,36 @@ public class Controller extends KeyAdapter
 			default:break;}}
 
 	public void keyPressed(KeyEvent e){
-		System.out.println( e.getKeyCode());
+		//System.out.println( e.getKeyCode());
 		switch( e.getKeyCode()){
 			case KeyEvent.VK_ESCAPE:{
-				boolean started;
 				synchronized( converter.statslock){
-					started = converter.started;}
-				System.out.println( started);
-				gui.close();
+					if( converter.done || ! converter.started)
+						gui.close();}
 				break;}
 			default: break;}}
+
+	public void changedUpdate(DocumentEvent event){
+		documentUpdate( event);}
+	public void insertUpdate(DocumentEvent event){
+		documentUpdate( event);}
+	public void removeUpdate(DocumentEvent event){
+		documentUpdate( event);}
+	public void documentUpdate( DocumentEvent event){
+		Document doc = event.getDocument();
+		String field_ac = (String) doc.getProperty(
+			documentContainer_property);
+		textFieldUpdate( field_ac);}
+
+	public void textFieldUpdate( String ac){
+		String content = null;
+		switch( ac){
+			case sp_input_text_ac:
+				content = gui.startPanel.input.text.getText();
+				break;
+			case sp_output_text_ac:
+				content = gui.startPanel.output.text.getText();
+				break;
+			default:break;}
+		System.out.printf("%s: %s\n", ac, content);}
 }
