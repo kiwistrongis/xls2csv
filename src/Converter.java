@@ -1,17 +1,9 @@
 //standard library imports
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.Observable;
 import java.util.Vector;
 //poi imports
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -19,7 +11,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
-public class Converter {
+public class Converter extends Observable {
 	//conversion parameters
 	public char delimiter;
 	public String eol;
@@ -36,10 +28,14 @@ public class Converter {
 	public Vector<FilePair> filepairs;
 	public Vector<Worker> workers;
 	//statistic variables
-	private Object statslock;
+	public Object statslock;
+	public boolean ready;
+	public boolean started;
 	public boolean done;
+	public int completed;
 	public int succeeded;
 	public int failed;
+	public int total;
 	public Vector<Exception> failureCauses;
 	//misc vars
 	public PrintStream log;
@@ -53,24 +49,22 @@ public class Converter {
 		output_ext = "csv";
 		workerLimitEnabled = false;
 		maxWorkerCount = 0;
-		nextWorker = 0;
 		//conversion variables
 		this.input = input;
 		this.output = output;
-		filepairs = new Vector<FilePair>();
-		workers = new Vector<Worker>();
 		//statistic variables
 		statslock = new Object();
-		done = false;
-		succeeded = 0;
-		failed = 0;
-		failureCauses = new Vector<Exception>();
 		//misc vars
 		log = System.out;}
 
 	//public member functions
 	public void prep()
 			throws IOException, FileNotFoundException {
+		//reinitialization
+		ready = false;
+		filepairs = new Vector<FilePair>();
+		workers = new Vector<Worker>();
+		//assert input file existance
 		if( ! input.exists())
 			throw new FileNotFoundException(
 				"Input file does not exist.");
@@ -110,10 +104,21 @@ public class Converter {
 		//create worker threads
 		for( FilePair pair : filepairs)
 			workers.add( new Worker( pair));
-		//evaluate stats
+		//reset stats
+		started = false;
+		done = false;
+		completed = 0;
+		succeeded = 0;
+		failed = 0;
+		nextWorker = 0;
+		total = workers.size();
+		failureCauses = new Vector<Exception>();
+		ready = true;
 		return;}
 
 	public void start(){
+		synchronized( statslock){
+			started = true;}
 		synchronized( nextWorker){
 			if( workerLimitEnabled)
 				while( nextWorker <
@@ -170,8 +175,11 @@ public class Converter {
 			else{
 				failed++;
 				failureCauses.add( worker.failureCause);}
+			completed++;
 			if( nextWorker >= workers.size())
-				done = true;}}
+				done = true;}
+		setChanged();
+		notifyObservers();}
 
 	//enum definitions
 	public enum InputMode {
@@ -193,12 +201,14 @@ public class Converter {
 		return path.getParent().resolve( basename).toFile();}
 
 	//subclasses
-	private class Worker extends Thread {
+	protected class Worker extends Thread {
 		public FilePair files;
+		public boolean completed;
 		public boolean succeeded;
 		public Exception failureCause;
 		public Worker( FilePair files){
-			this.files = files;}
+			this.files = files;
+			completed = false;}
 		public void run(){
 			log.printf("Worker starting on %s\n", files.input);
 			try{
@@ -209,6 +219,7 @@ public class Converter {
 			catch( Exception e){
 				failureCause = e;
 				succeeded = false;}
+			completed = true;
 			log.printf("Worker finished on %s\n", files.input);
 			handleWorkerTermination(this);}
 	}

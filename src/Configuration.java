@@ -1,5 +1,9 @@
+//standard library imports
 import java.io.File;
+import javax.swing.UIManager;
+//non-standard library imports
 import org.ini4j.Ini;
+
 public class Configuration{
 	Ini ini;
 	Ini.Section conv_section;
@@ -32,4 +36,11 @@ public class Configuration{
 		data = conv_section.get("maxWorkerCount");
 		if( data != null)
 			conv.maxWorkerCount = Integer.parseInt(data);}
+	public void loadGuiSettings(){
+		javax.swing.JFrame.setDefaultLookAndFeelDecorated(true);
+		try{
+			UIManager.setLookAndFeel(
+				"org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel");}
+		catch( Exception e){
+			System.out.println(e);}}
 }

@@ -1,39 +1,65 @@
 //standard library imports
 import java.io.File;
+import java.nio.file.Path;
 
 public class Driver {
 	public static void main( String[] args){
 		//local variables
+		boolean nogui = false;
+		Path program_path;
+		File input;
+		File output;
 		Converter converter;
-		Configuration config;
+		Configuration config = null;
+		final Controller controller = new Controller();
 
+		//find program path
 		//handle args
 		if( args.length == 0){
 			File dir = new File( System.getProperty("user.dir"));
-			converter = new Converter( dir, dir);}
+			input = dir;
+			output = dir;}
 		else if( args.length == 1){
 			File file = new File( args[0]);
 			if( file.isDirectory())
-				converter = new Converter( file, file);
+				input = output = file;
 			else
-				converter = new Converter( file,
-					Converter.changeFileExt( file, "csv"));}
-		else
-			converter = new Converter(
-				new File( args[0]),
-				new File( args[1]));
+				input = file;
+				output = Converter.changeFileExt( file, "csv");}
+		else{
+				input = new File( args[0]);
+				output = new File( args[1]);}
 
+		//initialize converter
+		converter = new Converter( input, output);
+		controller.listenTo( converter);
+
+		//locate config file
+		File config_file = new File("config.ini");
 		//load configuration from file
 		try{
-			config = new Configuration( new File("config.ini"));
-			config.load( converter);}
+			config = new Configuration( config_file);}
 		catch( Exception e){
+			System.out.println("Configuration loading failed");
 			e.printStackTrace();}
 
-		//prepare and print stats
+		//prepare converter
 		try{
+			if( config != null)
+				config.load( converter);
 			converter.prep();}
 		catch( Exception e){
 			e.printStackTrace();}
-		converter.start();}
+
+		//start gui
+		config.loadGuiSettings();
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				Gui gui = new Gui();
+				gui.setup();
+				controller.listenTo( gui);}});
+
+		//start
+		if( nogui)
+			converter.start();}
 }
