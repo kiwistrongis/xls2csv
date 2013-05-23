@@ -1,6 +1,7 @@
 Xls2Csv
 =======
 A conversion utility for xls files
+----------------------------------
 
 By: Kalev Kalda Sikes
 https://github.com/KiwiStrongis/xls2csv
