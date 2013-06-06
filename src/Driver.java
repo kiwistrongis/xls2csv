@@ -35,7 +35,10 @@ public class Driver {
 		controller.listenTo( converter);
 
 		//locate config file
-		File config_file = new File("config.ini");
+		ResourceManager rm = new ResourceManager();
+		File config_file = rm.locate("data/config.ini");
+		if( config_file == null)
+			config_file = rm.locate("data/default.ini");
 		//load configuration from file
 		try{
 			config.open( config_file);}
@@ -46,8 +49,7 @@ public class Driver {
 		//prepare converter
 		try{
 			if( config != null)
-				config.load( converter);
-			converter.prep();}
+				config.load( converter);}
 		catch( Exception e){
 			e.printStackTrace();}
 
@@ -61,6 +63,10 @@ public class Driver {
 				controller.listenTo( gui);}});
 
 		//start
-		if( nogui)
-			converter.start();}
+		if( nogui){
+			try{
+				converter.prep();
+				converter.start();}
+			catch( Exception e){
+				e.printStackTrace();}}}
 }

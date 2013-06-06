@@ -9,7 +9,8 @@ clean-specials:
 freshen: clean all
 
 #variables
-cp = -cp jsrc:bin:libs/*
+version = -source 1.7
+cp = -cp bin:libs/*
 dest = -d bin
 
 #groups
@@ -18,28 +19,31 @@ all: \
 	bin/Configuration.class \
 	bin/Controller.class \
 	bin/Converter.class \
-	bin/Gui.class
+	bin/Gui.class \
+	bin/ResourceManager.class
 
 #special
 test: bin/Driver.class
 	java $(cp) Driver input output
 xls2csv.jar: \
-		src/Manifest.txt \
-		bin/Converter.class \
 		bin/Driver.class
-	( cd bin && jar cfme ../xls2csv.jar \
-		../src/Manifest.txt Driver * )
+	cd bin && \
+	for file in $$(ls ../libs/*.jar); do jar xf $$file; done
+	cd bin && \
+	jar cfe ../xls2csv.jar Driver *
 	
 #top
 bin/Driver.class: src/Driver.java \
 		bin/Configuration.class \
 		bin/Controller.class \
 		bin/Converter.class \
-		bin/Gui.class
+		bin/Gui.class \
+		bin/ResourceManager.class
 	javac $(cp) $(dest) src/Driver.java
 
 bin/Configuration.class: src/Configuration.java \
-		bin/Converter.class
+		bin/Converter.class \
+		bin/Gui.class
 	javac $(cp) $(dest) src/Configuration.java
 
 bin/Controller.class: src/Controller.java \
@@ -50,10 +54,14 @@ bin/Controller.class: src/Controller.java \
 bin/Converter.class: src/Converter.java
 	javac $(cp) $(dest) src/Converter.java
 
-bin/Gui.class: src/Gui.java
+bin/Gui.class: src/Gui.java \
+		bin/ResourceManager.class
 	javac $(cp) $(dest) src/Gui.java
 
-#tests
+bin/ResourceManager.class: src/ResourceManager.java
+	javac $(cp) $(dest) src/ResourceManager.java
+
+#other tests
 test1: bin/Driver.class
 	java $(cp) Driver tests/1170a0a_ty2e0.xls output/1170a0a_ty2e0.csv
 

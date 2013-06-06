@@ -1,14 +1,20 @@
 //standard library imports
+import java.awt.Font;
 import java.io.File;
+import java.util.Enumeration;	
+import javax.swing.SwingUtilities;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+import javax.swing.plaf.FontUIResource;
 //non-standard library imports
 import org.ini4j.Ini;
 
 public class Configuration{
-	Ini ini;
-	Ini.Section meta_section;
-	Ini.Section conv_section;
-	Ini.Section gui_section;
+	public File file;
+	public Ini ini;
+	public Ini.Section meta_section;
+	public Ini.Section conv_section;
+	public Ini.Section gui_section;
 	
 	public Configuration(){
 		ini = null;
@@ -17,15 +23,21 @@ public class Configuration{
 		meta_section = null;}
 	public Configuration( File file)
 			throws java.io.IOException{
+		ini = null;
+		conv_section = null;
+		gui_section = null;
+		meta_section = null;
+		this.file = file;
 		open( file);}
 
 	//open file
 	public void open( File file)
 			throws java.io.IOException{
+		this.file = file;
 		Ini ini = new Ini();
 		ini.load(file);
-		conv_section = ini.get("Converter");
 		meta_section = ini.get("Meta");
+		conv_section = ini.get("Converter");
 		gui_section = ini.get("Gui");}
 
 	//load methods
@@ -47,9 +59,9 @@ public class Configuration{
 		if( data != null)
 			conv.encoding = data;
 		//output_ext
-		data = conv_section.get("output_ext");
+		/*data = conv_section.get("output_ext");
 		if( data != null)
-			conv.output_ext = data;
+			conv.output_ext = data;*/
 		//workerLimitEnabled
 		data = conv_section.get("workerLimitEnabled");
 		if( data != null)
@@ -68,5 +80,25 @@ public class Configuration{
 			UIManager.setLookAndFeel(
 				"org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel");}
 		catch( Exception e){
-			System.out.println(e);}}
+			System.out.println(e);}
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				multiplyGuiFontSize( 1.1);}});}
+
+	public void multiplyGuiFontSize( double multiplier){
+		UIDefaults defaults = UIManager.getDefaults();
+		Enumeration e = defaults.keys();
+		while( e.hasMoreElements()){
+			Object key = e.nextElement();
+			Object value = defaults.get( key);
+			if (value instanceof Font) {
+				Font font = (Font) value;
+				int newSize = (int) Math.round(
+					font.getSize() * multiplier);
+				value = value instanceof FontUIResource ?
+					new FontUIResource(
+						font.getName(), font.getStyle(), newSize) :
+					new Font(
+						font.getName(), font.getStyle(), newSize);
+				defaults.put( key, value);}}}
 }

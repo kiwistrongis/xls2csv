@@ -1,1 +1,1 @@
-java -jar xls2csv.jar %*
+java -jar xls2csv.jar
