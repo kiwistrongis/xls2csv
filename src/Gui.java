@@ -53,7 +53,8 @@ public class Gui extends JFrame{
 			this.setIconImage(
 				ImageIO.read(
 					new ResourceManager().locate(icon_filename)));}
-		catch(Exception e){ System.out.println(e);}
+		catch(Exception e){ }
+		//System.out.println(e);}
 
 		//add content
 		// get frame
@@ -77,7 +78,7 @@ public class Gui extends JFrame{
 		startPanel.switchTo();
 		this.setResizable(true);
 		this.setLocationRelativeTo(null);
-		System.out.println("Done Loading GUI");
+		//System.out.println("Done Loading GUI");
 		this.setVisible(true);}
 
 	//functions
@@ -92,14 +93,14 @@ public class Gui extends JFrame{
 		File result = null;
 		switch( returnCode){
 			case JFileChooser.CANCEL_OPTION:
-				System.out.println("File selection cancelled");
+				//System.out.println("File selection cancelled");
 				break;
 			case JFileChooser.APPROVE_OPTION:
-				System.out.println("File chosen");
+				//System.out.println("File chosen");
 				result = fileChooser.getSelectedFile();
 				break;
 			case JFileChooser.ERROR_OPTION:
-				System.out.println("File selection error");
+				//System.out.println("File selection error");
 				break;
 			default: break;}
 		return result;}

@@ -113,7 +113,7 @@ public class Controller extends KeyAdapter
 
 	public void actionPerformed( ActionEvent event){
 		String ac = event.getActionCommand();
-		System.out.println(ac);
+		//System.out.println(ac);
 		switch( ac){
 			//start panel
 			case sp_start_ac:{

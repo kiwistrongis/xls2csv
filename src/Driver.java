@@ -43,7 +43,7 @@ public class Driver {
 		try{
 			config.open( config_file);}
 		catch( Exception e){
-			System.out.println("Configuration loading failed");
+			//System.out.println("Configuration loading failed");
 			e.printStackTrace();}
 
 		//prepare converter
