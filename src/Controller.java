@@ -4,8 +4,6 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileNotFoundException;
-import java.util.Observable;
-import java.util.Observer;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.text.Document;
@@ -14,7 +12,8 @@ import javax.swing.text.Document;
  * handles all user input
  **/
 public class Controller extends KeyAdapter
-		implements ActionListener, Observer, DocumentListener {
+		implements ActionListener, WorkerTerminationListener,
+			DocumentListener {
 	//constant fields
 	public final static String
 		sp_start_ac = "sp_start_ac",
@@ -42,7 +41,7 @@ public class Controller extends KeyAdapter
 	public void listenTo(Converter converter){
 		//listen to converter
 		this.converter = converter;
-		converter.addObserver(this);}
+		converter.listeners.add(this);}
 
 	public void listenTo( Gui gui){
 		//listen to gui
@@ -95,7 +94,7 @@ public class Controller extends KeyAdapter
 		bar.addKeyListener( this);}
 	
 	//handles
-	public void update(Observable o, Object arg){
+	public void workerTerminated( WorkerTerminationEvent event){
 		if( converter!= null)
 			synchronized( converter.statslock){
 				SwingUtilities.invokeLater(new Runnable() {
@@ -103,7 +102,14 @@ public class Controller extends KeyAdapter
 						gui.progressPanel.progressBar.setValue(
 							converter.completed);}});
 				if( converter.done)
-					gui.progressPanel.button.setEnabled( true);}}
+					gui.progressPanel.button.setEnabled( true);}
+			gui.progressPanel.log.append(
+				String.format(
+					"%s converted to %s %s\n",
+					event.worker.files.input.getName(),
+					event.worker.files.output.getName(),
+					event.worker.succeeded ?
+						"successfully" : "unsuccessfully"));}
 
 	public void actionPerformed( ActionEvent event){
 		String ac = event.getActionCommand();
@@ -112,6 +118,7 @@ public class Controller extends KeyAdapter
 			//start panel
 			case sp_start_ac:{
 				synchronized( converter.statslock){
+					gui.progressPanel.log.setText("");
 					gui.progressPanel.progressBar.setMaximum(
 						converter.total);
 					gui.progressPanel.progressBar.setValue(

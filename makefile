@@ -10,7 +10,7 @@ freshen: clean all
 
 #variables
 version = -source 1.7
-cp = -cp bin:libs/*
+cp = -cp src:bin:libs/*
 dest = -d bin
 
 #groups
@@ -48,10 +48,14 @@ bin/Configuration.class: src/Configuration.java \
 
 bin/Controller.class: src/Controller.java \
 		bin/Converter.class \
-		bin/Gui.class
+		bin/Gui.class \
+		bin/WorkerTerminationEvent.class \
+		bin/WorkerTerminationListener.class
 	javac $(cp) $(dest) src/Controller.java
 	
-bin/Converter.class: src/Converter.java
+bin/Converter.class: src/Converter.java \
+		bin/WorkerTerminationEvent.class \
+		bin/WorkerTerminationListener.class
 	javac $(cp) $(dest) src/Converter.java
 
 bin/Gui.class: src/Gui.java \
@@ -61,6 +65,14 @@ bin/Gui.class: src/Gui.java \
 bin/ResourceManager.class: src/ResourceManager.java
 	javac $(cp) $(dest) src/ResourceManager.java
 
+bin/WorkerTerminationEvent.class: \
+		src/WorkerTerminationEvent.java
+	javac $(cp) $(dest) src/WorkerTerminationEvent.java
+
+bin/WorkerTerminationListener.class: \
+		src/WorkerTerminationListener.java \
+		bin/WorkerTerminationEvent.class
+	javac $(cp) $(dest) src/WorkerTerminationListener.java
 #other tests
 test1: bin/Driver.class
 	java $(cp) Driver tests/1170a0a_ty2e0.xls output/1170a0a_ty2e0.csv

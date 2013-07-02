@@ -274,6 +274,7 @@ public class Gui extends JFrame{
 		}
 	}
 	protected class ProgressPanel extends CustomJPanel {
+		JTextArea log;
 		JProgressBar progressBar;
 		JButton button;
 
@@ -287,13 +288,34 @@ public class Gui extends JFrame{
 			constraints.fill = GridBagConstraints.NONE;
 			constraints.insets = new Insets( 2, 2, 2, 2);
 
+			//Log
+			log = new JTextArea();
+			log.setEditable(false);
+			JScrollPane logscroller = new JScrollPane( log);
+			Dimension logscroller_dim = new Dimension( 150, 200);
+			logscroller.setMinimumSize( logscroller_dim);
+			logscroller.setPreferredSize( logscroller_dim);
+			//add log
+			constraints.gridx = 0;
+			constraints.gridy = 0;
+			constraints.weightx = 1;
+			constraints.weighty = 1;
+			constraints.fill = GridBagConstraints.BOTH;
+			constraints.gridwidth = 2;
+			this.add( logscroller, constraints);
+			//reset constraints
+			constraints.weightx = 0;
+			constraints.weighty = 0;
+			constraints.fill = GridBagConstraints.NONE;
+			constraints.gridwidth = 1;
+
 			//progress bar
 			progressBar = new JProgressBar(0, 10);
 			progressBar.setValue(0);
 			progressBar.setStringPainted(true);
 			// add progress bar with constraints
 			constraints.gridx = 0;
-			constraints.gridy = 0;
+			constraints.gridy = 1;
 			constraints.ipadx = 100;
 			constraints.weightx = 1;
 			constraints.fill = GridBagConstraints.HORIZONTAL;

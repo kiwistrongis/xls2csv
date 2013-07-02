@@ -2,8 +2,8 @@
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.util.EventObject;
 import java.util.Iterator;
-import java.util.Observable;
 import java.util.Scanner;
 import java.util.Vector;
 //poi imports
@@ -12,7 +12,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
-public class Converter extends Observable {
+public class Converter {
 	//conversion parameters
 	public char delimiter;
 	public String eol;
@@ -29,6 +29,7 @@ public class Converter extends Observable {
 	public OutputMode output_mode;
 	public Vector<FilePair> filepairs;
 	public Vector<Worker> workers;
+	public Vector<WorkerTerminationListener> listeners;
 	//statistic variables
 	public Object statslock;
 	public boolean ready;
@@ -58,7 +59,7 @@ public class Converter extends Observable {
 		statslock = new Object();
 		//misc vars
 		direction = Direction.toCSV;
-		log = System.out;}
+		listeners = new Vector<WorkerTerminationListener>();}
 
 	//public member functions
 	public void prep()
@@ -74,6 +75,7 @@ public class Converter extends Observable {
 		failureCauses = new Vector<Exception>();
 		filepairs = new Vector<FilePair>();
 		workers = new Vector<Worker>();
+		log = new PrintStream( new File( "failure.log"));
 		//assert input file existance
 		if( ! input.exists())
 			throw new FileNotFoundException(
@@ -178,8 +180,8 @@ public class Converter extends Observable {
 			while( cellCount++ < columnCount)
 				writer.print( delimiter);
 			writer.print(eol);
-			writer.flush();
-			writer.close();}}
+			writer.flush();}
+		writer.close();}
 
 	private void convertToXLS( File in, File out )
 			throws FileNotFoundException, IOException {
@@ -223,8 +225,10 @@ public class Converter extends Observable {
 			completed++;
 			if( nextWorker >= workers.size())
 				done = true;}
-		setChanged();
-		notifyObservers();}
+		WorkerTerminationEvent event =
+			new WorkerTerminationEvent( this, worker);
+		for( WorkerTerminationListener l : listeners)
+			l.workerTerminated( event);}
 
 	//enum definitions
 	public enum InputMode {
@@ -258,7 +262,6 @@ public class Converter extends Observable {
 			completed = false;
 			succeeded = false;}
 		public void run(){
-			log.printf("Worker starting on %s\n", files.input);
 					try{
 						switch( direction){
 							case toCSV:
@@ -270,14 +273,13 @@ public class Converter extends Observable {
 							default:break;}
 						succeeded = true;}
 					catch( Exception e){
-						e.printStackTrace();
+						log.println( e.getStackTrace());
 						failureCause = e;}
 			completed = true;
-			log.printf("Worker finished on %s\n", files.input);
 			handleWorkerTermination(this);}
 	}
-
-	private class FilePair{
+	
+	protected class FilePair{
 		public File input, output;
 		public FilePair( File input, File output){
 			this.input = input;

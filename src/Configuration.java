@@ -83,7 +83,7 @@ public class Configuration{
 			System.out.println(e);}
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				multiplyGuiFontSize( 1.1);}});}
+				multiplyGuiFontSize( 1.2);}});}
 
 	public void multiplyGuiFontSize( double multiplier){
 		UIDefaults defaults = UIManager.getDefaults();
