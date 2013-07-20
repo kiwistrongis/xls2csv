@@ -6,6 +6,7 @@ clean: clean-specials
 	rm -rf output/*
 clean-specials:
 	rm -rf xls2csv.jar
+	rm -f failure.log
 freshen: clean all
 
 #variables
